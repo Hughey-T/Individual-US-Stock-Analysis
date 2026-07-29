@@ -8,7 +8,7 @@
 |---|---|
 | `templates/standard_analysis.md` | 通常分析の唯一の命令正本（Phase1〜14、会話状態、出力契約） |
 | `templates/update_analysis.md` | 別チャットで行う更新の唯一の命令正本（Phase15） |
-| `schema/handoff.schema.json` | Phase14/15 が共有する引き継ぎキーの機械可読な定義 |
+| `schema/handoff.schema.json` | Phase14/15 が共有するキー、型、null可否、配列要素の機械可読なデータ契約 |
 | `docs/specification.md` | 正本の読み方、各 Phase の責務、設計判断 |
 | `examples/` | 架空企業を使った通常分析と更新分析の短縮例 |
 
@@ -38,14 +38,15 @@ python3 validator/validate.py
 python3 -m unittest discover -s tests -v
 ```
 
-validator は Phase 配列、会話文、必須要素、引き継ぎ schema、禁止された指示、UTF-8、LF、Markdown の見出しとコードフェンスを検査します。ネットワークも追加パッケージも不要です。
+validator は Phase 配列、会話文、必須要素、引き継ぎ schema、両サンプル内の実データ、確率合計、禁止された指示、UTF-8、LF、Markdown の見出しとコードフェンスを検査します。専用のschema subset validatorを内蔵するため、ネットワークも追加パッケージも不要です。Pull requestとmainへのpushでは `.github/workflows/validate.yml` が同じ検証を実行します。
 
 ## ディレクトリ
 
 ```text
 .
 ├── README.md
-├── docs/specification.md
+├── .github/workflows/validate.yml
+├── docs/{specification.md,compliance.md}
 ├── examples/{standard_sample.md,update_sample.md}
 ├── schema/handoff.schema.json
 ├── templates/{standard_analysis.md,update_analysis.md}

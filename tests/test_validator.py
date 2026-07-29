@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import tempfile
 import unittest
@@ -26,6 +27,20 @@ class ValidatorTests(unittest.TestCase):
         text = path.read_text(encoding="utf-8")
         self.assertIn(old, text)
         path.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+
+    def sample_data(self, relative: str = "examples/standard_sample.md") -> dict:
+        text = (self.root / relative).read_text(encoding="utf-8")
+        block = re.search(r"^```json\s*\n(.*?)^```\s*$", text, re.MULTILINE | re.DOTALL)
+        self.assertIsNotNone(block)
+        return json.loads(block.group(1))
+
+    def write_sample(self, data: object, relative: str = "examples/standard_sample.md") -> None:
+        path = self.root / relative
+        text = path.read_text(encoding="utf-8")
+        replacement = "```json\n" + json.dumps(data, ensure_ascii=False, indent=2) + "\n```"
+        text, count = re.subn(r"^```json\s*\n.*?^```\s*$", replacement, text, count=1, flags=re.MULTILINE | re.DOTALL)
+        self.assertEqual(1, count)
+        path.write_text(text, encoding="utf-8", newline="\n")
 
     def test_valid_repository(self) -> None:
         self.assertEqual([], validate_tree(self.root))
@@ -59,7 +74,7 @@ class ValidatorTests(unittest.TestCase):
     def test_detects_missing_handoff_key(self) -> None:
         path = self.root / "schema/handoff.schema.json"
         schema = json.loads(path.read_text(encoding="utf-8"))
-        schema["properties"]["FACTS"]["required"].remove("analysis_id")
+        schema["$defs"]["facts"]["required"].remove("analysis_id")
         path.write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
         self.assertIn("handoff-keys", self.codes())
 
@@ -68,6 +83,74 @@ class ValidatorTests(unittest.TestCase):
         with path.open("a", encoding="utf-8", newline="\n") as stream:
             stream.write("```text\n")
         self.assertIn("markdown-fence", self.codes())
+
+    def test_detects_invalid_handoff_version(self) -> None:
+        data = self.sample_data()
+        data["handoff_version"] = "2.0"
+        self.write_sample(data)
+        self.assertIn("handoff-instance", self.codes())
+
+    def test_detects_missing_facts_required_key(self) -> None:
+        data = self.sample_data()
+        del data["FACTS"]["analysis_id"]
+        self.write_sample(data)
+        self.assertIn("handoff-instance", self.codes())
+
+    def test_detects_missing_judgments_required_key(self) -> None:
+        data = self.sample_data()
+        del data["JUDGMENTS"]["強気仮説"]
+        self.write_sample(data)
+        self.assertIn("handoff-instance", self.codes())
+
+    def test_detects_additional_key(self) -> None:
+        data = self.sample_data()
+        data["FACTS"]["extra"] = "not allowed"
+        self.write_sample(data)
+        self.assertIn("handoff-instance", self.codes())
+
+    def test_detects_number_string_and_array_type_mismatches(self) -> None:
+        data = self.sample_data()
+        data["FACTS"]["基本株式数"] = "100 million"
+        data["JUDGMENTS"]["強気仮説"] = ["wrong"]
+        data["JUDGMENTS"]["共同シナリオ"] = "wrong"
+        self.write_sample(data)
+        issues = [issue for issue in validate_tree(self.root) if issue.code == "handoff-instance"]
+        self.assertGreaterEqual(len(issues), 3)
+
+    def test_detects_null_where_not_allowed(self) -> None:
+        data = self.sample_data()
+        data["FACTS"]["analysis_id"] = None
+        self.write_sample(data)
+        self.assertIn("handoff-instance", self.codes())
+
+    def test_detects_swapped_facts_and_judgments(self) -> None:
+        data = self.sample_data()
+        data["FACTS"], data["JUDGMENTS"] = data["JUDGMENTS"], data["FACTS"]
+        self.write_sample(data)
+        self.assertIn("handoff-instance", self.codes())
+
+    def test_detects_invalid_json(self) -> None:
+        self.mutate("examples/standard_sample.md", '"handoff_version": "1.0"', '"handoff_version": "1.0",,')
+        self.assertIn("handoff-json-syntax", self.codes())
+
+    def test_detects_standard_update_sample_mismatch(self) -> None:
+        data = self.sample_data("examples/update_sample.md")
+        del data["FACTS"]["主要契約"]
+        self.write_sample(data, "examples/update_sample.md")
+        codes = self.codes()
+        self.assertIn("handoff-instance", codes)
+        self.assertIn("handoff-sample-mismatch", codes)
+
+    def test_detects_template_schema_key_mismatch(self) -> None:
+        self.mutate("templates/update_analysis.md", "主要契約、主要イベント", "主要イベント")
+        self.assertIn("handoff-reference", self.codes())
+
+    def test_detects_schema_properties_required_mismatch(self) -> None:
+        path = self.root / "schema/handoff.schema.json"
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        del schema["$defs"]["facts"]["properties"]["analysis_id"]
+        path.write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+        self.assertIn("schema-properties-required", self.codes())
 
 
 if __name__ == "__main__":

@@ -8,17 +8,21 @@ import json
 import re
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 STANDARD = Path("templates/standard_analysis.md")
 UPDATE = Path("templates/update_analysis.md")
 SCHEMA = Path("schema/handoff.schema.json")
+STANDARD_SAMPLE = Path("examples/standard_sample.md")
+UPDATE_SAMPLE = Path("examples/update_sample.md")
 CONTENT_FILES = [
     Path("README.md"),
     Path("templates/standard_analysis.md"),
     Path("templates/update_analysis.md"),
     Path("docs/specification.md"),
+    Path("docs/compliance.md"),
     Path("examples/standard_sample.md"),
     Path("examples/update_sample.md"),
 ]
@@ -89,6 +93,130 @@ def phase_numbers(text: str) -> list[int]:
     return [int(n) for n in re.findall(r"^## Phase(\d+)(?:：|$)", text, re.MULTILINE)]
 
 
+def extract_fenced_json(path: Path, text: str, issues: list[Issue]) -> object | None:
+    blocks = re.findall(r"^```json\s*\n(.*?)^```\s*$", text, re.MULTILINE | re.DOTALL)
+    if len(blocks) != 1:
+        issues.append(Issue("handoff-json-count", path, f"引き継ぎJSONは1個必要です: {len(blocks)}"))
+        return None
+    try:
+        return json.loads(blocks[0])
+    except json.JSONDecodeError as exc:
+        issues.append(Issue("handoff-json-syntax", path, f"JSON構文エラー: {exc}"))
+        return None
+
+
+def resolve_ref(schema_root: dict[str, object], reference: str) -> object:
+    if not reference.startswith("#/"):
+        raise ValueError(f"ローカル参照だけを使用できます: {reference}")
+    node: object = schema_root
+    for part in reference[2:].split("/"):
+        if not isinstance(node, dict) or part not in node:
+            raise ValueError(f"参照先がありません: {reference}")
+        node = node[part]
+    return node
+
+
+def json_type_matches(value: object, expected: str) -> bool:
+    checks = {
+        "object": lambda item: isinstance(item, dict),
+        "array": lambda item: isinstance(item, list),
+        "string": lambda item: isinstance(item, str),
+        "number": lambda item: isinstance(item, (int, float)) and not isinstance(item, bool),
+        "integer": lambda item: isinstance(item, int) and not isinstance(item, bool),
+        "boolean": lambda item: isinstance(item, bool),
+        "null": lambda item: item is None,
+    }
+    return expected in checks and checks[expected](value)
+
+
+def validate_instance(
+    value: object,
+    rule: object,
+    schema_root: dict[str, object],
+    path: str = "$",
+) -> list[str]:
+    """Validate the JSON Schema subset deliberately used by this repository."""
+    if not isinstance(rule, dict):
+        return [f"{path}: schema rule must be an object"]
+    if "$ref" in rule:
+        try:
+            resolved = resolve_ref(schema_root, str(rule["$ref"]))
+        except ValueError as exc:
+            return [f"{path}: {exc}"]
+        return validate_instance(value, resolved, schema_root, path)
+    errors: list[str] = []
+    if "const" in rule and value != rule["const"]:
+        errors.append(f"{path}: const {rule['const']!r} required, got {value!r}")
+    if "enum" in rule and value not in rule["enum"]:
+        errors.append(f"{path}: value {value!r} is not in enum")
+    expected = rule.get("type")
+    if expected is not None:
+        choices = expected if isinstance(expected, list) else [expected]
+        if not all(isinstance(choice, str) for choice in choices) or not any(json_type_matches(value, choice) for choice in choices):
+            errors.append(f"{path}: type {choices!r} required, got {type(value).__name__}")
+            return errors
+    if isinstance(value, dict):
+        properties = rule.get("properties", {})
+        required = rule.get("required", [])
+        if not isinstance(properties, dict) or not isinstance(required, list):
+            return errors + [f"{path}: properties/required schema definition is invalid"]
+        for key in required:
+            if key not in value:
+                errors.append(f"{path}: missing required key {key!r}")
+        if rule.get("additionalProperties") is False:
+            for key in value:
+                if key not in properties:
+                    errors.append(f"{path}: additional key {key!r} is not allowed")
+        for key, child in value.items():
+            if key in properties:
+                errors.extend(validate_instance(child, properties[key], schema_root, f"{path}.{key}"))
+    if isinstance(value, list):
+        minimum = rule.get("minItems")
+        if isinstance(minimum, int) and len(value) < minimum:
+            errors.append(f"{path}: at least {minimum} items required")
+        if "items" in rule:
+            for index, child in enumerate(value):
+                errors.extend(validate_instance(child, rule["items"], schema_root, f"{path}[{index}]"))
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if "minimum" in rule and value < rule["minimum"]:
+            errors.append(f"{path}: value is below minimum {rule['minimum']}")
+        if "maximum" in rule and value > rule["maximum"]:
+            errors.append(f"{path}: value is above maximum {rule['maximum']}")
+    if isinstance(value, str) and rule.get("format") == "date-time":
+        try:
+            datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            errors.append(f"{path}: RFC 3339 date-time required")
+    return errors
+
+
+def validate_schema_contract(schema: dict[str, object], issues: list[Issue]) -> None:
+    """Ensure every closed object declares exactly the keys it requires/allows."""
+    def walk(rule: object, location: str) -> None:
+        if not isinstance(rule, dict):
+            return
+        if rule.get("type") == "object":
+            properties = rule.get("properties")
+            required = rule.get("required")
+            if not isinstance(properties, dict) or not isinstance(required, list):
+                issues.append(Issue("schema-object-contract", SCHEMA, f"{location}: properties/requiredが必要です"))
+            else:
+                missing_properties = [key for key in required if key not in properties]
+                optional_properties = [key for key in properties if key not in required]
+                if missing_properties or optional_properties:
+                    issues.append(Issue("schema-properties-required", SCHEMA, f"{location}: required/properties不一致 missing={missing_properties}, optional={optional_properties}"))
+            if rule.get("additionalProperties") is not False:
+                issues.append(Issue("schema-additional-properties", SCHEMA, f"{location}: additionalPropertiesはfalseが必要です"))
+        for key, child in rule.items():
+            if key not in {"properties"} and isinstance(child, (dict, list)):
+                walk(child, f"{location}/{key}")
+        properties = rule.get("properties", {})
+        if isinstance(properties, dict):
+            for key, child in properties.items():
+                walk(child, f"{location}/properties/{key}")
+    walk(schema, "#")
+
+
 def validate_tree(root: Path = ROOT) -> list[Issue]:
     issues: list[Issue] = []
     texts: dict[Path, str] = {}
@@ -147,12 +275,21 @@ def validate_tree(root: Path = ROOT) -> list[Issue]:
     except json.JSONDecodeError as exc:
         issues.append(Issue("schema-json", SCHEMA, f"JSONが不正です: {exc}"))
         return issues
+    if not isinstance(schema, dict):
+        issues.append(Issue("schema-json", SCHEMA, "schemaのトップレベルはobjectが必要です"))
+        return issues
+    validate_schema_contract(schema, issues)
     required_top = schema.get("required", [])
     if required_top != ["handoff_version", "FACTS", "JUDGMENTS"]:
         issues.append(Issue("handoff-top", SCHEMA, "トップレベル引き継ぎキーが不正です"))
-    properties = schema.get("properties", {})
+    definitions = schema.get("$defs", {})
+    if not isinstance(definitions, dict):
+        issues.append(Issue("schema-definitions", SCHEMA, "$defsがありません"))
+        return issues
     for section, expected in (("FACTS", FACT_KEYS), ("JUDGMENTS", JUDGMENT_KEYS)):
-        actual = properties.get(section, {}).get("required", [])
+        definition_name = "facts" if section == "FACTS" else "judgments"
+        definition = definitions.get(definition_name, {})
+        actual = definition.get("required", []) if isinstance(definition, dict) else []
         missing = [key for key in expected if key not in actual]
         extra = [key for key in actual if key not in expected]
         if missing or extra:
@@ -161,6 +298,32 @@ def validate_tree(root: Path = ROOT) -> list[Issue]:
             absent = [key for key in expected if key not in text]
             if absent:
                 issues.append(Issue("handoff-reference", rel, f"{section}引き継ぎ項目が不足: {absent}"))
+
+    samples: dict[Path, object] = {}
+    for rel in (STANDARD_SAMPLE, UPDATE_SAMPLE):
+        instance = extract_fenced_json(rel, texts.get(rel, ""), issues)
+        if instance is None:
+            continue
+        samples[rel] = instance
+        for message in validate_instance(instance, schema, schema):
+            issues.append(Issue("handoff-instance", rel, message))
+        if isinstance(instance, dict):
+            probabilities = instance.get("JUDGMENTS", {}).get("シナリオ確率", {}).get("items", []) if isinstance(instance.get("JUDGMENTS"), dict) else []
+            if isinstance(probabilities, list) and probabilities and all(isinstance(item, dict) and isinstance(item.get("probability"), (int, float)) for item in probabilities):
+                total = sum(item["probability"] for item in probabilities)
+                if abs(total - 100) > 1e-9:
+                    issues.append(Issue("scenario-probability-total", rel, f"シナリオ確率の合計は100が必要です: {total}"))
+                scenarios = instance.get("JUDGMENTS", {}).get("共同シナリオ", [])
+                scenario_names = {item.get("name") for item in scenarios if isinstance(item, dict)} if isinstance(scenarios, list) else set()
+                probability_names = {item.get("scenario") for item in probabilities}
+                if scenario_names != probability_names:
+                    issues.append(Issue("scenario-name-mismatch", rel, "共同シナリオと確率項目の名称が一致しません"))
+    if STANDARD_SAMPLE in samples and UPDATE_SAMPLE in samples:
+        for section in ("FACTS", "JUDGMENTS"):
+            left = samples[STANDARD_SAMPLE].get(section, {}) if isinstance(samples[STANDARD_SAMPLE], dict) else {}
+            right = samples[UPDATE_SAMPLE].get(section, {}) if isinstance(samples[UPDATE_SAMPLE], dict) else {}
+            if not isinstance(left, dict) or not isinstance(right, dict) or set(left) != set(right):
+                issues.append(Issue("handoff-sample-mismatch", UPDATE_SAMPLE, f"通常例と更新例の{section}キーが一致しません"))
     return issues
 
 
