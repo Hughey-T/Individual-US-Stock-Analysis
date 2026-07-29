@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Individual stock analysis handoff",
+  "type": "object",
+  "required": ["handoff_version", "FACTS", "JUDGMENTS"],
+  "properties": {
+    "handoff_version": {"const": "1.0"},
+    "FACTS": {
+      "type": "object",
+      "required": ["analysis_id", "基準日時", "基準株価", "直近決算期", "基本株式数", "完全希薄化株式数", "現金", "負債", "リース負債", "企業価値", "ガイダンス", "主要KPI", "主要契約", "主要イベント", "未確認情報", "使用資料", "データ信頼度"]
+    },
+    "JUDGMENTS": {
+      "type": "object",
+      "required": ["強気仮説", "弱気仮説", "クラックス", "因果モデル", "共同シナリオ", "シナリオ確率", "基準シナリオ", "使用した評価モデル", "妥当価値帯", "投資適格性", "判断頑健性", "価格レビューライン", "バリュエーション帯", "テーゼ無効化条件", "更新トリガー", "未解決事項"]
+    }
+  },
+  "additionalProperties": false
+}
