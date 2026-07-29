@@ -184,7 +184,9 @@ def validate_instance(
             errors.append(f"{path}: value is above maximum {rule['maximum']}")
     if isinstance(value, str) and rule.get("format") == "date-time":
         try:
-            datetime.fromisoformat(value.replace("Z", "+00:00"))
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if parsed.tzinfo is None or parsed.utcoffset() is None:
+                raise ValueError("timezone offset is required")
         except ValueError:
             errors.append(f"{path}: RFC 3339 date-time required")
     return errors
@@ -314,10 +316,17 @@ def validate_tree(root: Path = ROOT) -> list[Issue]:
                 if abs(total - 100) > 1e-9:
                     issues.append(Issue("scenario-probability-total", rel, f"シナリオ確率の合計は100が必要です: {total}"))
                 scenarios = instance.get("JUDGMENTS", {}).get("共同シナリオ", [])
-                scenario_names = {item.get("name") for item in scenarios if isinstance(item, dict)} if isinstance(scenarios, list) else set()
-                probability_names = {item.get("scenario") for item in probabilities}
+                scenario_name_list = [item.get("name") for item in scenarios if isinstance(item, dict)] if isinstance(scenarios, list) else []
+                probability_name_list = [item.get("scenario") for item in probabilities]
+                scenario_names = set(scenario_name_list)
+                probability_names = set(probability_name_list)
+                if len(scenario_names) != len(scenario_name_list) or len(probability_names) != len(probability_name_list):
+                    issues.append(Issue("scenario-name-duplicate", rel, "共同シナリオと確率項目の名称は重複できません"))
                 if scenario_names != probability_names:
                     issues.append(Issue("scenario-name-mismatch", rel, "共同シナリオと確率項目の名称が一致しません"))
+                baseline = instance.get("JUDGMENTS", {}).get("基準シナリオ")
+                if baseline not in scenario_names:
+                    issues.append(Issue("baseline-scenario-mismatch", rel, "基準シナリオは共同シナリオの名称と一致する必要があります"))
     if STANDARD_SAMPLE in samples and UPDATE_SAMPLE in samples:
         for section in ("FACTS", "JUDGMENTS"):
             left = samples[STANDARD_SAMPLE].get(section, {}) if isinstance(samples[STANDARD_SAMPLE], dict) else {}

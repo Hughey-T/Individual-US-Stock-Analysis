@@ -152,6 +152,22 @@ class ValidatorTests(unittest.TestCase):
         path.write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
         self.assertIn("schema-properties-required", self.codes())
 
+    def test_detects_date_time_without_timezone(self) -> None:
+        data = self.sample_data()
+        data["FACTS"]["基準日時"] = "2026-07-29T09:00:00"
+        self.write_sample(data)
+        self.assertIn("handoff-instance", self.codes())
+
+    def test_detects_duplicate_and_unknown_scenario_names(self) -> None:
+        data = self.sample_data()
+        data["JUDGMENTS"]["シナリオ確率"]["items"][1]["scenario"] = "成功"
+        data["JUDGMENTS"]["基準シナリオ"] = "存在しないシナリオ"
+        self.write_sample(data)
+        codes = self.codes()
+        self.assertIn("scenario-name-duplicate", codes)
+        self.assertIn("scenario-name-mismatch", codes)
+        self.assertIn("baseline-scenario-mismatch", codes)
+
 
 if __name__ == "__main__":
     unittest.main()
