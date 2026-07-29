@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/individual-stock-analysis/handoff.schema.json",
+  "title": "Individual stock analysis handoff",
+  "type": "object",
+  "required": ["handoff_version", "FACTS", "JUDGMENTS"],
+  "properties": {
+    "handoff_version": {"const": "1.0"},
+    "FACTS": {"$ref": "#/$defs/facts"},
+    "JUDGMENTS": {"$ref": "#/$defs/judgments"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "nullableString": {"type": ["string", "null"]},
+    "nullableNumber": {"type": ["number", "null"]},
+    "classification": {
+      "type": "string",
+      "enum": ["確認済み事実", "会社主張", "市場コンセンサス", "分析上の仮定", "分析上の推論", "未確認"]
+    },
+    "metric": {
+      "type": "object",
+      "required": ["name", "value", "unit", "as_of", "classification"],
+      "properties": {
+        "name": {"type": "string"},
+        "value": {"type": ["number", "string", "null"]},
+        "unit": {"$ref": "#/$defs/nullableString"},
+        "as_of": {"type": ["string", "null"], "format": "date-time"},
+        "classification": {"$ref": "#/$defs/classification"}
+      },
+      "additionalProperties": false
+    },
+    "datedItem": {
+      "type": "object",
+      "required": ["summary", "date", "classification"],
+      "properties": {
+        "summary": {"type": "string"},
+        "date": {"type": ["string", "null"], "format": "date-time"},
+        "classification": {"$ref": "#/$defs/classification"}
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["title", "url", "published_at", "accessed_at"],
+      "properties": {
+        "title": {"type": "string"},
+        "url": {"$ref": "#/$defs/nullableString"},
+        "published_at": {"type": ["string", "null"], "format": "date-time"},
+        "accessed_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "facts": {
+      "type": "object",
+      "required": ["analysis_id", "基準日時", "基準株価", "直近決算期", "基本株式数", "完全希薄化株式数", "現金", "負債", "リース負債", "企業価値", "ガイダンス", "主要KPI", "主要契約", "主要イベント", "未確認情報", "使用資料", "データ信頼度"],
+      "properties": {
+        "analysis_id": {"type": "string"},
+        "基準日時": {"type": "string", "format": "date-time"},
+        "基準株価": {
+          "type": "object",
+          "required": ["value", "currency", "session"],
+          "properties": {
+            "value": {"type": "number", "minimum": 0},
+            "currency": {"type": "string"},
+            "session": {"type": "string", "enum": ["通常取引", "プレマーケット", "アフター"]}
+          },
+          "additionalProperties": false
+        },
+        "直近決算期": {"$ref": "#/$defs/nullableString"},
+        "基本株式数": {"$ref": "#/$defs/nullableNumber"},
+        "完全希薄化株式数": {"$ref": "#/$defs/nullableNumber"},
+        "現金": {"$ref": "#/$defs/nullableNumber"},
+        "負債": {"$ref": "#/$defs/nullableNumber"},
+        "リース負債": {"$ref": "#/$defs/nullableNumber"},
+        "企業価値": {"$ref": "#/$defs/nullableNumber"},
+        "ガイダンス": {"type": "array", "items": {"$ref": "#/$defs/metric"}},
+        "主要KPI": {"type": "array", "items": {"$ref": "#/$defs/metric"}},
+        "主要契約": {"type": "array", "items": {"$ref": "#/$defs/datedItem"}},
+        "主要イベント": {"type": "array", "items": {"$ref": "#/$defs/datedItem"}},
+        "未確認情報": {"type": "array", "items": {"type": "string"}},
+        "使用資料": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+        "データ信頼度": {
+          "type": "object",
+          "required": ["level", "rationale"],
+          "properties": {
+            "level": {"type": "string", "enum": ["高", "中", "低"]},
+            "rationale": {"type": "string"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "crux": {
+      "type": "object",
+      "required": ["question", "current_judgment", "break_condition"],
+      "properties": {
+        "question": {"type": "string"},
+        "current_judgment": {"type": "string"},
+        "break_condition": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "causalLink": {
+      "type": "object",
+      "required": ["cause", "effect"],
+      "properties": {"cause": {"type": "string"}, "effect": {"type": "string"}},
+      "additionalProperties": false
+    },
+    "scenario": {
+      "type": "object",
+      "required": ["name", "description"],
+      "properties": {"name": {"type": "string"}, "description": {"type": "string"}},
+      "additionalProperties": false
+    },
+    "probabilityItem": {
+      "type": "object",
+      "required": ["scenario", "probability"],
+      "properties": {
+        "scenario": {"type": "string"},
+        "probability": {"type": "number", "minimum": 0, "maximum": 100}
+      },
+      "additionalProperties": false
+    },
+    "priceLine": {
+      "type": "object",
+      "required": ["price", "currency", "review_reason"],
+      "properties": {
+        "price": {"type": "number", "minimum": 0},
+        "currency": {"type": "string"},
+        "review_reason": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "valuationBands": {
+      "type": "object",
+      "required": ["currency", "割安", "妥当", "割高"],
+      "properties": {
+        "currency": {"type": "string"},
+        "割安": {"type": "string"},
+        "妥当": {"type": "string"},
+        "割高": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "judgments": {
+      "type": "object",
+      "required": ["強気仮説", "弱気仮説", "クラックス", "因果モデル", "共同シナリオ", "シナリオ確率", "基準シナリオ", "使用した評価モデル", "妥当価値帯", "投資適格性", "判断頑健性", "価格レビューライン", "バリュエーション帯", "テーゼ無効化条件", "更新トリガー", "未解決事項"],
+      "properties": {
+        "強気仮説": {"type": "string"},
+        "弱気仮説": {"type": "string"},
+        "クラックス": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/crux"}},
+        "因果モデル": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/causalLink"}},
+        "共同シナリオ": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/scenario"}},
+        "シナリオ確率": {
+          "type": "object",
+          "required": ["horizon", "items"],
+          "properties": {
+            "horizon": {"type": "string"},
+            "items": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/probabilityItem"}}
+          },
+          "additionalProperties": false
+        },
+        "基準シナリオ": {"type": "string"},
+        "使用した評価モデル": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "妥当価値帯": {"$ref": "#/$defs/nullableString"},
+        "投資適格性": {"type": "string", "enum": ["現在価格で買い持ち可能", "条件付き投資対象", "中立・監視", "避ける", "テーゼ崩壊"]},
+        "判断頑健性": {
+          "type": "object",
+          "required": ["level", "rationale"],
+          "properties": {
+            "level": {"type": "string", "enum": ["高", "中", "低"]},
+            "rationale": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "価格レビューライン": {"type": "array", "items": {"$ref": "#/$defs/priceLine"}},
+        "バリュエーション帯": {"$ref": "#/$defs/valuationBands"},
+        "テーゼ無効化条件": {"type": "array", "items": {"type": "string"}},
+        "更新トリガー": {"type": "array", "items": {"type": "string"}},
+        "未解決事項": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    }
+  }
+}
