@@ -1,0 +1,26 @@
+{
+  "standalone_static": {
+    "ticker": "DEMO",
+    "persistence": "session_local"
+  },
+  "standalone_runtime": {
+    "session_id": "session-runtime-001",
+    "analysis_id": "analysis-demo-001"
+  },
+  "pipeline": {
+    "blind_intake": {
+      "ticker": "DEMO",
+      "verified_facts": [],
+      "source_cutoff": "2026-01-01T00:00:00Z"
+    },
+    "hidden_until_phase_17": [
+      "comparison_rank",
+      "selection_reason",
+      "target_value"
+    ],
+    "reconciliation": {
+      "phase": 17,
+      "upstream_rank": 2
+    }
+  }
+}

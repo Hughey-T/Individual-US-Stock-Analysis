@@ -1,60 +1,29 @@
-# 仕様ガイド
+# Specification 2.0.0
 
-## 1. 文書モデル
+## Responsibilities and modes
 
-命令の正本は `templates/standard_analysis.md` と `templates/update_analysis.md` です。この文書は、正本を変更する人が責務とデータ境界を理解するためのガイドであり、会話文を別定義しません。引き継ぎキーは `schema/handoff.schema.json` が機械可読な正本です。
+AI performs research, interpretation, causal reasoning, bull/bear theses, crux/outside-view/scenario assumptions, valuation assumptions, red-team reasoning, eligibility and natural-language explanation. Machine code checks only identity, cutoff, ordering, schema/references, immutable bytes, share/probability/valuation arithmetic, supersession and outcome maturity. It does not certify truth.
 
-## 2. 状態機械
+`standalone_static`, `standalone_runtime`, and `pipeline` share one analytical contract. Static mode is session-local and exports JSON. Runtime mode adds identity and durable immutable history. Pipeline mode adds blind intake and delayed reconciliation.
 
-通常チャットは「ティッカー待ち → タイトル済み → Phase1〜14 → 完了」の状態を持ちます。タイトルは実行単位に含みません。ユーザーの `次` だけが次の実行単位へ遷移させ、各ターンで一つだけ出力します。更新チャットは「引き継ぎ待ち → 更新待ち → Phase15 → 完了」で、通常チャットとは状態を共有しません。
+## Evidence and snapshot
 
-## 3. Phase 責務表
+Six-class taxonomy prevents claims, estimates and assumptions from masquerading as facts. Evidence records carry identity/type/title/publisher/source identity, published/retrieved/as-of timestamps, company/industry/macro scope, classification, fields, reliability, point-in-time eligibility and notes. Cutoff/future/unknown/duplicate/source-less/misclassified and silently stale evidence fails validation. AI judgments additionally carry support, opposition, roots, confidence, uncertainty and invalidation.
 
-| Phase | 入力の中心 | 成果物 | 判断可否 |
-|---:|---|---|---|
-| 1 | 一次資料・市場データ | 固定スナップショット、希薄化ブリッジ、証拠台帳 | 不可 |
-| 2 | 事業資料 | 事業構造、KPI因果鎖、中心争点 | 不可 |
-| 3 | 財務諸表・資本資料 | 会計品質、資本構造、資金繰り | 不可 |
-| 4 | 物語と企業行動 | 物語の該当性と価値への経路 | 限定評価 |
-| 5 | Phase1〜4 | 最善の強気仮説 | 確率未決定 |
-| 6 | Phase1〜4 | 独立した弱気仮説と失敗連鎖 | 確率未決定 |
-| 7 | 決算・イベント | ファンダメンタルズと異常反応 | 仮説への証拠評価 |
-| 8 | Phase5〜7 | 観測可能なクラックスと因果モデル | 構造化のみ |
-| 9 | Phase8 | 独立判断、共同シナリオ、合計100%の確率 | 可 |
-| 10 | Phase1・3・9 | 再現可能な独立評価レンジ | 可 |
-| 11 | Phase9・10 | 4期間の数値分布 | 可 |
-| 12 | Phase10・11 | 現在価格からの投資適格性 | 可（執行は不可） |
-| 13 | クラックス・判断 | 原因別モニタリング計画 | 更新規則のみ |
-| 14 | Phase1〜13 | サマリーと引き継ぎ JSON | 新規分析不可 |
-| 15 | 前回引き継ぎ・新情報 | 事実差分、再評価、次回引き継ぎ | 可 |
+Phase 1 freezes the full identity/time/market/capital snapshot and evidence/blind hashes. Rebase replaces it only through a new revision. The dilution bridge enumerates common stock, warrants, converts, awards/options/ESPP, consideration/earnouts, treasury adjustment, exclusions, authorized capacity and financing overlay. Only economically included components sum to current fully diluted shares.
 
-## 4. 情報と確率
+## Causality, scenarios and value
 
-重要記述のラベルは、確認済み事実、会社主張、市場コンセンサス、分析上の仮定、分析上の推論、未確認情報です。これにより、出典で確認できる内容と分析者が作った内容を追跡できます。
+Graph nodes cover external/industry/company/customer/supplier/operating/financial/value concepts. Edges specify direction, lag, mechanism, evidence and contrary evidence, confidence/status and a dependency root. Duplicate `(root, claim)` evidence is rejected. Reference classes and their selection/survivorship limits form a separate outside view.
 
-数値化する確からしさは三つです。
+Scenarios are mutually exclusive within a horizon and sum to 100%; dependent crux odds are never multiplied blindly. Each scenario closes operating, financing, dilution, terminal and valuation assumptions. The machine recalculates EV, equity, per share, returns, downside and weighted value. Normal valuation estimates intrinsic value from independent assumptions. Reverse valuation solves exactly one primary market-implied variable while holding the rest explicit. Red team is a separate artifact and may confirm or overturn the original.
 
-- **データ信頼度**：観測した事実・数値の正しさ。
-- **シナリオ確率**：相互排他的な未来の実現可能性。同一期間では合計100%。
-- **判断頑健性**：合理的な前提変更に対し投資適格性が維持される度合い。
+Absolute eligibility compares required return, cash, broad equity, risk-free/user hurdle, downside and permanent loss. Cross-company ranking belongs upstream. Phase 18 only integrates validated work into a monitoring plan, entry handoff and decision ledger.
 
-クラックスは観測可能な問いです。共通原因や前後関係を因果モデルへ置き、共同シナリオで依存関係を扱うため、結果の数だけ証拠を加算しません。
+## State, update, outcomes and failures
 
-## 5. 評価基準とリベース
+Exact `次` advances one initial/update Phase; exact `更新` starts an update. Embedded commands, questions, skips and post-final advancement do not progress. Runtime states are `not_generated`, `generated_not_persisted`, `persisted_pending_verification`, `integrity_verified`, `failed_terminal`, and `superseded`; only accepted plus successful readback completes a Phase. Independent artifacts freeze before Phase 17. Corrections append revisions with prior/new hashes, evidence, logic, changed fields, reason and time.
 
-Phase1で analysis_id を持つ固定スナップショットを作ります。後続で見つけた現在価格は参考表示に留めます。正式な更新はリベースと明記し、株価、純負債、株式数の基準を同時に示して、影響する評価式を再実行します。
+The four-Phase update requires a strictly newer UTC cutoff, compares actual changed/unchanged fields, re-evaluates blind, reruns both valuation directions and red team, and atomically supersedes the handoff. Ledger horizons include 1/3/6/12/24/36 months. Outcome records start `not_matured` and later support return/benchmark/excess, MDD/MAE/MFE/volatility/downside capture, catalyst/invalidation realization, KPI/revenue/margin/FCF/dilution errors, calibration, range coverage and decision/override/robustness accuracy.
 
-経済的完全希薄化株式数は1株価値の分母です。普通株式と、経済的希薄化が見込まれる証券をブリッジし、自己株式方式等を反映します。未行使の発行可能枠は現在分母ではなく、必要な将来調達としてモデル化します。
-
-## 6. FACTS / JUDGMENTS 引き継ぎ
-
-Phase14の JSON は一つのコードブロックでコピーします。`FACTS` は次回に差分比較する観測状態、`JUDGMENTS` は新事実で再評価できる分析状態です。Phase15は必ず事実差分を先に提示してから判断を変更します。キーを省略しないため、不明と欠落を区別できます。schemaは内部objectも閉じ、型、null可否、日時形式、配列要素を定義します。通常例と更新例の実データはvalidatorが同じschemaへ照合します。
-
-## 7. 機能境界と設計判断
-
-- **二つの正本に分離**：時間経過後の更新を通常会話の暗黙状態へ依存させないためです。影響範囲は起動規則と状態管理です。
-- **JSON Schema をキー台帳に採用**：Markdown間のキーずれを機械検査し、一括コピーを安定させるためです。実行時の外部ライブラリ依存はありません。
-- **投資適格性で終了**：企業価値分析と注文執行では必要データと責任が異なるためです。Phase12は将来接続に必要な事業・評価条件だけを渡します。
-- **架空例を採用**：実データの鮮度や外部取得に依存せず、形式を再現可能に検証するためです。
-
-競合や類似企業は対象会社を理解し倍率を根拠付ける用途に限定します。実注文、購入タイミング、数量配分、複数の投資候補からの選択は成果物の外です。
+Failure is conservative: missing data stays unresolved; identity or cutoff mismatch rejects; stale data requires warning; impossible arithmetic fails; unavailable runtime is never described as live; storage corruption requires restore rather than mutation. See migration and runtime documents for rollback and operational recovery.

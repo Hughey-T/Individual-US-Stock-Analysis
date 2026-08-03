@@ -38,7 +38,9 @@ class ValidatorTests(unittest.TestCase):
         path = self.root / relative
         text = path.read_text(encoding="utf-8")
         replacement = "```json\n" + json.dumps(data, ensure_ascii=False, indent=2) + "\n```"
-        text, count = re.subn(r"^```json\s*\n.*?^```\s*$", replacement, text, count=1, flags=re.MULTILINE | re.DOTALL)
+        text, count = re.subn(
+            r"^```json\s*\n.*?^```\s*$", replacement, text, count=1, flags=re.MULTILINE | re.DOTALL
+        )
         self.assertEqual(1, count)
         path.write_text(text, encoding="utf-8", newline="\n")
 
@@ -47,7 +49,11 @@ class ValidatorTests(unittest.TestCase):
 
     def test_detects_retired_phase_system(self) -> None:
         marker = "Phase" + "12" + "：" + "更新"
-        self.mutate("README.md", "# Individual US Stock Analysis", "# Individual US Stock Analysis\n\n" + marker)
+        self.mutate(
+            "README.md",
+            "# Individual US Stock Analysis",
+            "# Individual US Stock Analysis\n\n" + marker,
+        )
         self.assertIn("retired-phase-system", self.codes())
 
     def test_detects_prohibited_wording(self) -> None:
@@ -75,7 +81,9 @@ class ValidatorTests(unittest.TestCase):
         path = self.root / "schema/handoff.schema.json"
         schema = json.loads(path.read_text(encoding="utf-8"))
         schema["$defs"]["facts"]["required"].remove("analysis_id")
-        path.write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+        path.write_text(
+            json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
         self.assertIn("handoff-keys", self.codes())
 
     def test_detects_broken_fence(self) -> None:
@@ -130,7 +138,9 @@ class ValidatorTests(unittest.TestCase):
         self.assertIn("handoff-instance", self.codes())
 
     def test_detects_invalid_json(self) -> None:
-        self.mutate("examples/standard_sample.md", '"handoff_version": "1.0"', '"handoff_version": "1.0",,')
+        self.mutate(
+            "examples/standard_sample.md", '"handoff_version": "1.0"', '"handoff_version": "1.0",,'
+        )
         self.assertIn("handoff-json-syntax", self.codes())
 
     def test_detects_standard_update_sample_mismatch(self) -> None:
@@ -149,7 +159,9 @@ class ValidatorTests(unittest.TestCase):
         path = self.root / "schema/handoff.schema.json"
         schema = json.loads(path.read_text(encoding="utf-8"))
         del schema["$defs"]["facts"]["properties"]["analysis_id"]
-        path.write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+        path.write_text(
+            json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
         self.assertIn("schema-properties-required", self.codes())
 
     def test_detects_date_time_without_timezone(self) -> None:

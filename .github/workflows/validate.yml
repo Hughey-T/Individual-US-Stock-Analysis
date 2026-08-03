@@ -1,25 +1,43 @@
-name: Validate templates
-
-on:
-  pull_request:
-  push:
-    branches: [main]
-
-permissions:
-  contents: read
-
+name: validate
+on: [push, pull_request]
 jobs:
-  validate:
+  test:
+    strategy: {matrix: {python: ['3.11', '3.12', '3.13']}}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Python syntax
-        run: python3 -m py_compile validator/validate.py tests/test_validator.py
-      - name: Static validator
-        run: python3 validator/validate.py
-      - name: Unit tests
-        run: python3 -m unittest discover -s tests -v
-      - name: Whitespace errors
-        run: git diff --check "$(git merge-base HEAD origin/main)..HEAD"
+      - uses: actions/setup-python@v5
+        with: {python-version: '${{ matrix.python }}'}
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m unittest discover -s tests -v
+      - run: python validator/validate.py
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy stock_analysis_runtime
+      - run: python -m build
+      - run: python -m pip install --force-reinstall dist/*.whl
+      - run: python -c "import stock_analysis_runtime"
+      - run: git diff --check
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m unittest tests.test_runtime -v
+      - name: OpenAPI and schema smoke validation
+        run: |
+          python -c "import json; json.load(open('schema/contracts.schema.json')); assert 'openapi: 3.1.0' in open('openapi.yaml').read()"
+      - run: docker build -t stock-analysis-runtime .
+      - name: Docker health and persistent-volume restart
+        run: |
+          docker volume create stock-analysis-test
+          docker run -d --name stock-runtime-1 -v stock-analysis-test:/data -e STOCK_ANALYSIS_TOKEN=test -p 8080:8080 stock-analysis-runtime
+          for i in {1..20}; do curl --fail http://127.0.0.1:8080/health && break; sleep 1; done
+          curl --fail http://127.0.0.1:8080/health
+          docker rm -f stock-runtime-1
+          docker run -d --name stock-runtime-2 -v stock-analysis-test:/data -e STOCK_ANALYSIS_TOKEN=test -p 8080:8080 stock-analysis-runtime
+          for i in {1..20}; do curl --fail http://127.0.0.1:8080/health && break; sleep 1; done
+          curl --fail http://127.0.0.1:8080/health
+          docker rm -f stock-runtime-2
+          docker volume rm stock-analysis-test
+      - name: Fresh clone validation
+        run: git clone --local . /tmp/fresh && cd /tmp/fresh && python validator/validate.py

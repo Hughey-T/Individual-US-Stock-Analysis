@@ -17,6 +17,9 @@ UPDATE = Path("templates/update_analysis.md")
 SCHEMA = Path("schema/handoff.schema.json")
 STANDARD_SAMPLE = Path("examples/standard_sample.md")
 UPDATE_SAMPLE = Path("examples/update_sample.md")
+INITIAL_FIXTURE = Path("examples/fixtures/initial-18.json")
+UPDATE_FIXTURE = Path("examples/fixtures/update-4.json")
+MODES_FIXTURE = Path("examples/fixtures/modes.json")
 CONTENT_FILES = [
     Path("README.md"),
     Path("templates/standard_analysis.md"),
@@ -30,14 +33,41 @@ CONTENT_FILES = [
 PROMPT = "「次」と送信してください。"
 COMPLETE = "Phaseはすべて完了しています。"
 FACT_KEYS = [
-    "analysis_id", "基準日時", "基準株価", "直近決算期", "基本株式数", "完全希薄化株式数",
-    "現金", "負債", "リース負債", "企業価値", "ガイダンス", "主要KPI", "主要契約",
-    "主要イベント", "未確認情報", "使用資料", "データ信頼度",
+    "analysis_id",
+    "基準日時",
+    "基準株価",
+    "直近決算期",
+    "基本株式数",
+    "完全希薄化株式数",
+    "現金",
+    "負債",
+    "リース負債",
+    "企業価値",
+    "ガイダンス",
+    "主要KPI",
+    "主要契約",
+    "主要イベント",
+    "未確認情報",
+    "使用資料",
+    "データ信頼度",
 ]
 JUDGMENT_KEYS = [
-    "強気仮説", "弱気仮説", "クラックス", "因果モデル", "共同シナリオ", "シナリオ確率",
-    "基準シナリオ", "使用した評価モデル", "妥当価値帯", "投資適格性", "判断頑健性",
-    "価格レビューライン", "バリュエーション帯", "テーゼ無効化条件", "更新トリガー", "未解決事項",
+    "強気仮説",
+    "弱気仮説",
+    "クラックス",
+    "因果モデル",
+    "共同シナリオ",
+    "シナリオ確率",
+    "基準シナリオ",
+    "使用した評価モデル",
+    "妥当価値帯",
+    "投資適格性",
+    "判断頑健性",
+    "価格レビューライン",
+    "バリュエーション帯",
+    "テーゼ無効化条件",
+    "更新トリガー",
+    "未解決事項",
 ]
 
 
@@ -96,7 +126,9 @@ def phase_numbers(text: str) -> list[int]:
 def extract_fenced_json(path: Path, text: str, issues: list[Issue]) -> object | None:
     blocks = re.findall(r"^```json\s*\n(.*?)^```\s*$", text, re.MULTILINE | re.DOTALL)
     if len(blocks) != 1:
-        issues.append(Issue("handoff-json-count", path, f"引き継ぎJSONは1個必要です: {len(blocks)}"))
+        issues.append(
+            Issue("handoff-json-count", path, f"引き継ぎJSONは1個必要です: {len(blocks)}")
+        )
         return None
     try:
         return json.loads(blocks[0])
@@ -152,7 +184,9 @@ def validate_instance(
     expected = rule.get("type")
     if expected is not None:
         choices = expected if isinstance(expected, list) else [expected]
-        if not all(isinstance(choice, str) for choice in choices) or not any(json_type_matches(value, choice) for choice in choices):
+        if not all(isinstance(choice, str) for choice in choices) or not any(
+            json_type_matches(value, choice) for choice in choices
+        ):
             errors.append(f"{path}: type {choices!r} required, got {type(value).__name__}")
             return errors
     if isinstance(value, dict):
@@ -169,14 +203,18 @@ def validate_instance(
                     errors.append(f"{path}: additional key {key!r} is not allowed")
         for key, child in value.items():
             if key in properties:
-                errors.extend(validate_instance(child, properties[key], schema_root, f"{path}.{key}"))
+                errors.extend(
+                    validate_instance(child, properties[key], schema_root, f"{path}.{key}")
+                )
     if isinstance(value, list):
         minimum = rule.get("minItems")
         if isinstance(minimum, int) and len(value) < minimum:
             errors.append(f"{path}: at least {minimum} items required")
         if "items" in rule:
             for index, child in enumerate(value):
-                errors.extend(validate_instance(child, rule["items"], schema_root, f"{path}[{index}]"))
+                errors.extend(
+                    validate_instance(child, rule["items"], schema_root, f"{path}[{index}]")
+                )
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         if "minimum" in rule and value < rule["minimum"]:
             errors.append(f"{path}: value is below minimum {rule['minimum']}")
@@ -194,6 +232,7 @@ def validate_instance(
 
 def validate_schema_contract(schema: dict[str, object], issues: list[Issue]) -> None:
     """Ensure every closed object declares exactly the keys it requires/allows."""
+
     def walk(rule: object, location: str) -> None:
         if not isinstance(rule, dict):
             return
@@ -201,14 +240,33 @@ def validate_schema_contract(schema: dict[str, object], issues: list[Issue]) -> 
             properties = rule.get("properties")
             required = rule.get("required")
             if not isinstance(properties, dict) or not isinstance(required, list):
-                issues.append(Issue("schema-object-contract", SCHEMA, f"{location}: properties/requiredが必要です"))
+                issues.append(
+                    Issue(
+                        "schema-object-contract",
+                        SCHEMA,
+                        f"{location}: properties/requiredが必要です",
+                    )
+                )
             else:
                 missing_properties = [key for key in required if key not in properties]
                 optional_properties = [key for key in properties if key not in required]
                 if missing_properties or optional_properties:
-                    issues.append(Issue("schema-properties-required", SCHEMA, f"{location}: required/properties不一致 missing={missing_properties}, optional={optional_properties}"))
+                    issues.append(
+                        Issue(
+                            "schema-properties-required",
+                            SCHEMA,
+                            f"{location}: required/properties不一致 "
+                            f"missing={missing_properties}, optional={optional_properties}",
+                        )
+                    )
             if rule.get("additionalProperties") is not False:
-                issues.append(Issue("schema-additional-properties", SCHEMA, f"{location}: additionalPropertiesはfalseが必要です"))
+                issues.append(
+                    Issue(
+                        "schema-additional-properties",
+                        SCHEMA,
+                        f"{location}: additionalPropertiesはfalseが必要です",
+                    )
+                )
         for key, child in rule.items():
             if key not in {"properties"} and isinstance(child, (dict, list)):
                 walk(child, f"{location}/{key}")
@@ -216,6 +274,7 @@ def validate_schema_contract(schema: dict[str, object], issues: list[Issue]) -> 
         if isinstance(properties, dict):
             for key, child in properties.items():
                 walk(child, f"{location}/properties/{key}")
+
     walk(schema, "#")
 
 
@@ -237,26 +296,31 @@ def validate_tree(root: Path = ROOT) -> list[Issue]:
     standard = texts.get(STANDARD, "")
     update = texts.get(UPDATE, "")
     numbers = phase_numbers(standard)
-    if numbers != list(range(1, 15)):
-        issues.append(Issue("standard-phases", STANDARD, f"Phase見出しは1〜14を一度ずつ順番に置く必要があります: {numbers}"))
-    update_numbers = phase_numbers(update)
-    if update_numbers != [15]:
-        issues.append(Issue("update-phase", UPDATE, f"更新正本の実行単位はPhase15だけです: {update_numbers}"))
+    if numbers != list(range(1, 19)):
+        issues.append(
+            Issue(
+                "standard-phases",
+                STANDARD,
+                f"Phase見出しは1〜18を一度ずつ順番に置く必要があります: {numbers}",
+            )
+        )
+    update_numbers = [int(n) for n in re.findall(r"^## Update Phase (\d+)：", update, re.MULTILINE)]
+    if update_numbers != list(range(1, 5)):
+        issues.append(Issue("update-phase", UPDATE, f"更新Phaseは1〜4が必要です: {update_numbers}"))
 
     standard_requirements = {
         "title-reply": "{TICKER} yyyy/mm/dd",
-        "first-next": "最初の `次` で Phase1",
-        "one-phase-turn": "1ターンにつき1Phaseのみ",
+        "exact-next": "exact `次`",
+        "one-phase-turn": "exactly one Phase",
         "progress-prompt": PROMPT,
         "completion": COMPLETE,
-        "snapshot": "固定スナップショット",
-        "rebase": "リベース",
-        "dilution-bridge": "完全希薄化ブリッジ",
+        "snapshot": "fixed snapshot",
+        "rebase": "rebase",
+        "dilution-bridge": "closed dilution bridge",
         "facts": "FACTS",
-        "judgments": "JUDGMENTS",
-        "probability-total": "シナリオ確率の合計を100%",
-        "phase1-target-ban": "アナリスト目標株価は表示しない",
-        "phase10-target-order": "独立評価完成後にのみアナリスト目標株価",
+        "judgments": "AI_JUDGMENTS",
+        "probability-total": "total exactly 100%",
+        "target-order": "Phase 17",
     }
     for code, phrase in standard_requirements.items():
         if phrase not in standard:
@@ -295,11 +359,17 @@ def validate_tree(root: Path = ROOT) -> list[Issue]:
         missing = [key for key in expected if key not in actual]
         extra = [key for key in actual if key not in expected]
         if missing or extra:
-            issues.append(Issue("handoff-keys", SCHEMA, f"{section}キー不整合 missing={missing}, extra={extra}"))
+            issues.append(
+                Issue(
+                    "handoff-keys", SCHEMA, f"{section}キー不整合 missing={missing}, extra={extra}"
+                )
+            )
         for rel, text in ((STANDARD, standard), (UPDATE, update)):
             absent = [key for key in expected if key not in text]
             if absent:
-                issues.append(Issue("handoff-reference", rel, f"{section}引き継ぎ項目が不足: {absent}"))
+                issues.append(
+                    Issue("handoff-reference", rel, f"{section}引き継ぎ項目が不足: {absent}")
+                )
 
     samples: dict[Path, object] = {}
     for rel in (STANDARD_SAMPLE, UPDATE_SAMPLE):
@@ -310,29 +380,102 @@ def validate_tree(root: Path = ROOT) -> list[Issue]:
         for message in validate_instance(instance, schema, schema):
             issues.append(Issue("handoff-instance", rel, message))
         if isinstance(instance, dict):
-            probabilities = instance.get("JUDGMENTS", {}).get("シナリオ確率", {}).get("items", []) if isinstance(instance.get("JUDGMENTS"), dict) else []
-            if isinstance(probabilities, list) and probabilities and all(isinstance(item, dict) and isinstance(item.get("probability"), (int, float)) for item in probabilities):
+            probabilities = (
+                instance.get("JUDGMENTS", {}).get("シナリオ確率", {}).get("items", [])
+                if isinstance(instance.get("JUDGMENTS"), dict)
+                else []
+            )
+            if (
+                isinstance(probabilities, list)
+                and probabilities
+                and all(
+                    isinstance(item, dict) and isinstance(item.get("probability"), (int, float))
+                    for item in probabilities
+                )
+            ):
                 total = sum(item["probability"] for item in probabilities)
                 if abs(total - 100) > 1e-9:
-                    issues.append(Issue("scenario-probability-total", rel, f"シナリオ確率の合計は100が必要です: {total}"))
+                    issues.append(
+                        Issue(
+                            "scenario-probability-total",
+                            rel,
+                            f"シナリオ確率の合計は100が必要です: {total}",
+                        )
+                    )
                 scenarios = instance.get("JUDGMENTS", {}).get("共同シナリオ", [])
-                scenario_name_list = [item.get("name") for item in scenarios if isinstance(item, dict)] if isinstance(scenarios, list) else []
+                scenario_name_list = (
+                    [item.get("name") for item in scenarios if isinstance(item, dict)]
+                    if isinstance(scenarios, list)
+                    else []
+                )
                 probability_name_list = [item.get("scenario") for item in probabilities]
                 scenario_names = set(scenario_name_list)
                 probability_names = set(probability_name_list)
-                if len(scenario_names) != len(scenario_name_list) or len(probability_names) != len(probability_name_list):
-                    issues.append(Issue("scenario-name-duplicate", rel, "共同シナリオと確率項目の名称は重複できません"))
+                if len(scenario_names) != len(scenario_name_list) or len(probability_names) != len(
+                    probability_name_list
+                ):
+                    issues.append(
+                        Issue(
+                            "scenario-name-duplicate",
+                            rel,
+                            "共同シナリオと確率項目の名称は重複できません",
+                        )
+                    )
                 if scenario_names != probability_names:
-                    issues.append(Issue("scenario-name-mismatch", rel, "共同シナリオと確率項目の名称が一致しません"))
+                    issues.append(
+                        Issue(
+                            "scenario-name-mismatch",
+                            rel,
+                            "共同シナリオと確率項目の名称が一致しません",
+                        )
+                    )
                 baseline = instance.get("JUDGMENTS", {}).get("基準シナリオ")
                 if baseline not in scenario_names:
-                    issues.append(Issue("baseline-scenario-mismatch", rel, "基準シナリオは共同シナリオの名称と一致する必要があります"))
+                    issues.append(
+                        Issue(
+                            "baseline-scenario-mismatch",
+                            rel,
+                            "基準シナリオは共同シナリオの名称と一致する必要があります",
+                        )
+                    )
     if STANDARD_SAMPLE in samples and UPDATE_SAMPLE in samples:
         for section in ("FACTS", "JUDGMENTS"):
-            left = samples[STANDARD_SAMPLE].get(section, {}) if isinstance(samples[STANDARD_SAMPLE], dict) else {}
-            right = samples[UPDATE_SAMPLE].get(section, {}) if isinstance(samples[UPDATE_SAMPLE], dict) else {}
+            left = (
+                samples[STANDARD_SAMPLE].get(section, {})
+                if isinstance(samples[STANDARD_SAMPLE], dict)
+                else {}
+            )
+            right = (
+                samples[UPDATE_SAMPLE].get(section, {})
+                if isinstance(samples[UPDATE_SAMPLE], dict)
+                else {}
+            )
             if not isinstance(left, dict) or not isinstance(right, dict) or set(left) != set(right):
-                issues.append(Issue("handoff-sample-mismatch", UPDATE_SAMPLE, f"通常例と更新例の{section}キーが一致しません"))
+                issues.append(
+                    Issue(
+                        "handoff-sample-mismatch",
+                        UPDATE_SAMPLE,
+                        f"通常例と更新例の{section}キーが一致しません",
+                    )
+                )
+    for rel, expected in ((INITIAL_FIXTURE, 18), (UPDATE_FIXTURE, 4)):
+        try:
+            fixture = json.loads(read_utf8_lf(root / rel, issues))
+        except (OSError, json.JSONDecodeError) as exc:
+            issues.append(Issue("fixture", rel, f"fixtureを読めません: {exc}"))
+            continue
+        if not isinstance(fixture, list) or len(fixture) != expected:
+            issues.append(Issue("fixture-coverage", rel, f"artifact数は{expected}が必要です"))
+            continue
+        phases = [item.get("phase") for item in fixture if isinstance(item, dict)]
+        if phases != list(range(1, expected + 1)):
+            issues.append(Issue("fixture-coverage", rel, f"Phase対応が不正です: {phases}"))
+    try:
+        modes = json.loads(read_utf8_lf(root / MODES_FIXTURE, issues))
+        if set(modes) != {"standalone_static", "standalone_runtime", "pipeline"}:
+            issues.append(Issue("fixture-modes", MODES_FIXTURE, "3 mode fixtureが必要です"))
+    except (OSError, json.JSONDecodeError) as exc:
+        issues.append(Issue("fixture", MODES_FIXTURE, f"fixtureを読めません: {exc}"))
     return issues
 
 
@@ -346,7 +489,10 @@ def main(argv: list[str] | None = None) -> int:
             print(issue)
         print(f"validation failed: {len(issues)} issue(s)")
         return 1
-    print(f"validation passed: {len(CONTENT_FILES)} Markdown files, 15 Phase units, handoff schema")
+    print(
+        f"validation passed: {len(CONTENT_FILES)} Markdown files, "
+        "18 initial + 4 update Phase units, schemas"
+    )
     return 0
 
 

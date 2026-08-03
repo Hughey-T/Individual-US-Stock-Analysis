@@ -49,3 +49,7 @@
 ```
 
 「次」と送信してください。
+
+## Contract 2.0 complete update mapping
+
+The executable fixture `examples/fixtures/update-4.json` maps array index 0–3 to Update Phase 1–4. It contains the strictly newer snapshot/diff, blind causal reassessment, separate revaluation/reverse/red-team result, then active/superseded handoff identities and an append-only `not_matured` ledger outcome. `tests/test_e2e.py` submits these artifacts one per transition and verifies resume, supersession and publication replay.

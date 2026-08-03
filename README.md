@@ -1,57 +1,55 @@
 # Individual US Stock Analysis
 
-米国個別株を、新規投資家の視点から一貫した基準で分析するための Custom GPT 向け Markdown 正本です。外部 API や売買機能は含まず、標準ライブラリだけで正本と例を検証できます。
+米国個別株の独立AI分析契約です。
 
-## 正本と責務
+Contract **2.0.0** is an AI-reasoning-first system for independent, point-in-time US-company analysis. The Custom GPT researches and reasons; the machine validates identities, chronology, references, arithmetic, state and persistence. The runtime never generates moat, management quality, theses, assumptions or recommendations. This is neither automatic trading nor brokerage/order execution.
 
-| ファイル | 責務 |
+## Architecture and current state
+
+The repository supports the same analytical method through three transports: `standalone_static` needs no runtime and remains conversation-local (`session_local`); `standalone_runtime` validates and persists artifacts in a user-deployed private service; `pipeline` initially projects only a blind comparison handoff. No runtime is deployed by this repository. The Python runtime is optional, local/private, and calls no LLM.
+
+| Layer | Source of truth |
 |---|---|
-| `templates/standard_analysis.md` | 通常分析の唯一の命令正本（Phase1〜14、会話状態、出力契約） |
-| `templates/update_analysis.md` | 別チャットで行う更新の唯一の命令正本（Phase15） |
-| `schema/handoff.schema.json` | Phase14/15 が共有するキー、型、null可否、配列要素の機械可読なデータ契約 |
-| `docs/specification.md` | 正本の読み方、各 Phase の責務、設計判断 |
-| `examples/` | 架空企業を使った通常分析と更新分析の短縮例 |
+| Initial conversation, 18 Phases | `templates/standard_analysis.md` |
+| Update conversation, 4 Phases | `templates/update_analysis.md` |
+| Closed data contracts | `schema/contracts.schema.json`, legacy `schema/handoff.schema.json` |
+| Semantic/runtime enforcement | `stock_analysis_runtime/` |
+| REST contract | `openapi.yaml` |
+| Static repository audit | `validator/validate.py` |
 
-運用規則は正本を優先し、説明文書は規則を再定義せず参照関係を説明します。通常分析と更新分析は独立しており、共有するものは引き継ぎデータだけです。
+## Independence protocol
 
-## 使い方
+Pipeline intake exposes security identity, request/horizons/cutoff, verified facts/source references, data quality, dilution definition and unresolved primary-source checks. It hides ranks, classifications, selection rationale, expected return/probability/confidence, upstream theses/recommendations, theme rank, persuasive narrative, target value and future outcomes. Independent scenarios, normal valuation, reverse valuation and red-team artifacts are frozen first. Reconciliation appears only in Phase 17. In standalone mode external analyst target prices are likewise unseen until Phase 17 and can never rewrite the independent valuation.
 
-1. 通常分析では `templates/standard_analysis.md` 全文を Custom GPT の指示へ登録します。
-2. 新規チャットでティッカーだけを送り、タイトル返信の後は `次` で Phase を一つずつ進めます。
-3. Phase14 の fenced JSON 引き継ぎデータを保存します。
-4. 後日、`templates/update_analysis.md` を登録した別チャットへ JSON を貼り、`更新` または `次` を送って Phase15 を実行します。
+## Analytical contracts
 
-通常分析は Phase1〜14、更新は Phase15 です。1ターンでは一つだけ実行し、先取りしません。事実は `FACTS`、分析判断は `JUDGMENTS` に分離されます。売買執行や投資先選択ではなく、対象企業の分析と投資適格性までを扱います。
+Material information is separated into `FACTS`, `COMPANY_CLAIMS`, `EXTERNAL_ESTIMATES`, `AI_ASSUMPTIONS`, `AI_JUDGMENTS` and `UNRESOLVED`. Evidence is point-in-time registered. Economic fully diluted shares use a closed bridge, excluding authorized capacity and future financing from the current denominator. A versioned causal graph maps mechanisms and dependency roots so shared causes are not counted as independent evidence.
 
-## 設計の要点
+The 18 initial Phases cover snapshot, business, accounting/dilution, industry, moat, management, narrative, independent bull and bear theses, event study, causal cruxes, outside view, joint scenarios, independent normal valuation, reverse valuation, independent red team, delayed reconciliation, and absolute investment eligibility/handoff/ledger. Joint scenario probabilities total 100%; valuation identities are reproducible. Normal valuation and price-implied reverse valuation remain separate. The AI must challenge itself and need not find the stock investable.
 
-- Phase1 の固定スナップショットを後続計算の基準とし、更新は明示的なリベースとして再計算します。
-- 基本株式数と経済的完全希薄化株式数を区別し、Phase1・3・10・11で同じ定義を使います。
-- 確率は相互排他的な共同シナリオへ付与し、合計100%にします。相互依存する原因を二重計上しません。
-- 独立評価を終えた Phase10 で初めて外部の目標株価との差を調べます。
-- Phase12 は投資適格性までとし、注文数量・購入タイミングなどの執行判断は作りません。
+Updates are four explicit Phases: newer snapshot/diff; blind re-evaluation and graph update; separate revaluation/reverse/red-team/reconciliation; eligibility, atomic handoff supersession and append-only ledger. Outcomes remain `not_matured` until their horizon and can later measure return, drawdown, forecast errors, calibration and value-range coverage without future leakage or hindsight edits.
 
-## 検証
+The Entry Strategy handoff is a closed downstream contract and contains one of `NO_ENTRY_REVIEW_REQUIRED`, `ENTRY_REVIEW_ALLOWED`, `ENTRY_REVIEW_CONDITIONAL`, or `RETURN_TO_ANALYSIS`. It is not a buy instruction, and this repository never chooses quantities, timing, staged orders or stops.
+
+## Use
+
+For static use, install the applicable template as the Custom GPT canonical instruction, send a ticker, and thereafter send exact `次`; exact `更新` begins an update after completion. One response produces one Phase. Save the Phase-18 JSON yourself—static mode does not claim durable storage.
+
+For private runtime use, see `docs/runtime.md` and `openapi.yaml`. A minimal local run is:
 
 ```bash
-python3 validator/validate.py
-python3 -m unittest discover -s tests -v
+STOCK_ANALYSIS_TOKEN=secret STOCK_ANALYSIS_STORAGE=./data python -m stock_analysis_runtime.api
 ```
 
-validator は Phase 配列、会話文、必須要素、引き継ぎ schema、両サンプル内の実データ、確率合計、禁止された指示、UTF-8、LF、Markdown の見出しとコードフェンスを検査します。専用のschema subset validatorを内蔵するため、ネットワークも追加パッケージも不要です。Pull requestとmainへのpushでは `.github/workflows/validate.yml` が同じ検証を実行します。
+## Validation
 
-## ディレクトリ
-
-```text
-.
-├── README.md
-├── .github/workflows/validate.yml
-├── docs/{specification.md,compliance.md}
-├── examples/{standard_sample.md,update_sample.md}
-├── schema/handoff.schema.json
-├── templates/{standard_analysis.md,update_analysis.md}
-├── tests/test_validator.py
-└── validator/validate.py
+```bash
+python -m unittest discover -s tests -v
+python validator/validate.py
+python -m ruff check .
+python -m ruff format --check .
+python -m mypy stock_analysis_runtime
+python -m build
 ```
 
-本成果物は教育・調査用の分析手順であり、投資助言や注文執行システムではありません。確認できない数値は推測で補完せず、利用時には一次資料と取得日時を示します。
+See `docs/specification.md` for methodology/failure modes, `docs/compliance.md` for requirement mapping, `docs/migration.md` for compatibility/rollback, and `docs/runtime.md` for authentication, deployment, backup and publication integrity.
