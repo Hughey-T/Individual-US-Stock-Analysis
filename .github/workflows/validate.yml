@@ -24,7 +24,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: python -m unittest tests.test_runtime -v
       - name: OpenAPI and schema smoke validation
-        run: python -c "import json; json.load(open('schema/contracts.schema.json')); assert 'openapi: 3.1.0' in open('openapi.yaml').read()"
+        run: |
+          python -c "import json; json.load(open('schema/contracts.schema.json')); assert 'openapi: 3.1.0' in open('openapi.yaml').read()"
       - run: docker build -t stock-analysis-runtime .
       - name: Docker health and persistent-volume restart
         run: |
