@@ -1,0 +1,31 @@
+openapi: 3.1.0
+info:
+  title: Individual Stock Analysis Private Runtime
+  version: 2.0.0
+  description: Validates and persists AI-authored artifacts; it does not run an LLM or generate analysis.
+servers: [{url: http://localhost:8080}]
+security: [{bearerAuth: []}]
+paths:
+  /health:
+    get: {security: [], responses: {'200': {description: Healthy}}}
+  /v1/sessions:
+    post: {summary: Create standalone-runtime or pipeline session, responses: {'200': {description: Created}, '400': {description: Invalid}}}
+  /v1/sessions/{session_id}/next:
+    get: {summary: Retrieve exactly one next Phase contract, parameters: [{$ref: '#/components/parameters/session'}], responses: {'200': {description: Contract}}}
+  /v1/sessions/{session_id}/artifacts:
+    post: {summary: Validate, atomically persist, and read back a Phase artifact, parameters: [{$ref: '#/components/parameters/session'}], responses: {'200': {description: Receipt}}}
+  /v1/sessions/{session_id}/reconciliation/disclose:
+    post: {summary: Disclose reconciliation only after independent freeze, parameters: [{$ref: '#/components/parameters/session'}], responses: {'200': {description: Disclosed}}}
+  /v1/sessions/{session_id}/updates:
+    post: {summary: Start four-Phase update, parameters: [{$ref: '#/components/parameters/session'}], responses: {'200': {description: Started}}}
+  /v1/sessions/{session_id}/integrity:
+    get: {summary: Verify immutable publication inventory, parameters: [{$ref: '#/components/parameters/session'}], responses: {'200': {description: Verified}}}
+  /v1/sessions/{session_id}/handoff:
+    get: {summary: Retrieve the validated final handoff, parameters: [{$ref: '#/components/parameters/session'}], responses: {'200': {description: Handoff}}}
+  /v1/sessions/{session_id}/ledger:
+    get: {summary: Retrieve the immutable decision ledger, parameters: [{$ref: '#/components/parameters/session'}], responses: {'200': {description: Ledger}}}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}
+  parameters:
+    session: {name: session_id, in: path, required: true, schema: {type: string}}

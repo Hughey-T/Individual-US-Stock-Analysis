@@ -92,3 +92,9 @@ XYZ 2026/07/29
 ```text
 Phaseはすべて完了しています。
 ```
+
+## Contract 2.0 complete Phase mapping
+
+The legacy fenced handoff above remains a read-only compatibility sample. The executable 2.0 fixture is `examples/fixtures/initial-18.json`: array index 0–17 maps one-to-one to initial Phase 1–18. Every entry carries contract, analysis/security identity, classification payload, artifact type, phase, and a synthetic summary. Phase-specific structures are: Phase 1 snapshot; Phase 11 causal graph/dependency root; Phase 12 outside view; Phase 13 25/50/25 joint scenarios; Phase 14 independent valuation with targets hidden; Phase 15 one-variable reverse valuation; Phase 16 red team; Phase 17 reconciliation after freeze; and Phase 18 closed handoff plus decision ledger with a `not_matured` outcome.
+
+`examples/fixtures/modes.json` provides valid projections for `standalone_static`, `standalone_runtime`, and pipeline blind intake. Its pipeline reconciliation is explicitly Phase 17-only. Static persistence is `session_local`; runtime persistence is demonstrated by the E2E tests, not claimed by this Markdown.

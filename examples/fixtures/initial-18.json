@@ -1,0 +1,366 @@
+[
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_1",
+    "phase": 1,
+    "summary": "Synthetic validated Phase 1 artifact",
+    "snapshot": {
+      "as_of": "2026-01-01T00:00:00Z",
+      "source_cutoff": "2026-01-01T00:00:00Z",
+      "price": 10,
+      "economic_fully_diluted_shares": 105
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_2",
+    "phase": 2,
+    "summary": "Synthetic validated Phase 2 artifact"
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_3",
+    "phase": 3,
+    "summary": "Synthetic validated Phase 3 artifact"
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_4",
+    "phase": 4,
+    "summary": "Synthetic validated Phase 4 artifact"
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_5",
+    "phase": 5,
+    "summary": "Synthetic validated Phase 5 artifact"
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_6",
+    "phase": 6,
+    "summary": "Synthetic validated Phase 6 artifact"
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_7",
+    "phase": 7,
+    "summary": "Synthetic validated Phase 7 artifact"
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_8",
+    "phase": 8,
+    "summary": "Synthetic validated Phase 8 artifact"
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_9",
+    "phase": 9,
+    "summary": "Synthetic validated Phase 9 artifact"
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_10",
+    "phase": 10,
+    "summary": "Synthetic validated Phase 10 artifact"
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_11",
+    "phase": 11,
+    "summary": "Synthetic validated Phase 11 artifact",
+    "causal_graph": {
+      "version": "1",
+      "nodes": [
+        "demand",
+        "revenue",
+        "fcf",
+        "value"
+      ],
+      "dependency_roots": [
+        "customer_adoption"
+      ]
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_12",
+    "phase": 12,
+    "summary": "Synthetic validated Phase 12 artifact",
+    "outside_view": {
+      "reference_class": "synthetic peers",
+      "limitation": "small sample"
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_13",
+    "phase": 13,
+    "summary": "Synthetic validated Phase 13 artifact",
+    "scenarios": [
+      {
+        "name": "bear",
+        "probability": 25
+      },
+      {
+        "name": "base",
+        "probability": 50
+      },
+      {
+        "name": "bull",
+        "probability": 25
+      }
+    ]
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_14",
+    "phase": 14,
+    "summary": "Synthetic validated Phase 14 artifact",
+    "independent_valuation": {
+      "range": [
+        8,
+        14
+      ],
+      "target_prices_seen": false
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_15",
+    "phase": 15,
+    "summary": "Synthetic validated Phase 15 artifact",
+    "reverse_valuation": {
+      "solved_variable": "revenue_growth",
+      "fixed_variables": {
+        "margin": 0.2
+      },
+      "conclusion": "roughly aligned"
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_16",
+    "phase": 16,
+    "summary": "Synthetic validated Phase 16 artifact",
+    "red_team": {
+      "strongest_objection": "reference class weakness",
+      "robustness": "MODERATE"
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_17",
+    "phase": 17,
+    "summary": "Synthetic validated Phase 17 artifact",
+    "reconciliation": {
+      "disclosed_after_freeze": true,
+      "upstream_rank": 2,
+      "external_target_range": [
+        9,
+        15
+      ]
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "initial_phase_18",
+    "phase": 18,
+    "summary": "Synthetic validated Phase 18 artifact",
+    "handoff": {
+      "handoff_version": "2.0.0",
+      "review_status": "ENTRY_REVIEW_CONDITIONAL",
+      "persistence_status": "session_local"
+    },
+    "ledger": {
+      "decision_id": "decision-001",
+      "outcomes": [
+        {
+          "horizon_months": 12,
+          "status": "not_matured"
+        }
+      ]
+    }
+  }
+]

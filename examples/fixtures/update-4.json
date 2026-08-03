@@ -1,0 +1,100 @@
+[
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "update_phase_1",
+    "phase": 1,
+    "update_id": "update-demo-001",
+    "summary": "Synthetic update Phase 1",
+    "diff": {
+      "previous_cutoff": "2026-01-01T00:00:00Z",
+      "new_cutoff": "2026-02-01T00:00:00Z",
+      "changed_facts": [
+        "price"
+      ]
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "update_phase_2",
+    "phase": 2,
+    "update_id": "update-demo-001",
+    "summary": "Synthetic update Phase 2",
+    "blind_reassessment": {
+      "changed_nodes": [
+        "demand"
+      ],
+      "unchanged_nodes": [
+        "value"
+      ]
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "update_phase_3",
+    "phase": 3,
+    "update_id": "update-demo-001",
+    "summary": "Synthetic update Phase 3",
+    "revaluation": {
+      "independent_range": [
+        9,
+        15
+      ],
+      "reverse_solved_variable": "revenue_growth",
+      "robustness": "MODERATE"
+    }
+  },
+  {
+    "contract_version": "2.0.0",
+    "analysis_id": "analysis-demo-001",
+    "security_id": "sec-demo",
+    "classification_payload": {
+      "FACTS": [],
+      "COMPANY_CLAIMS": [],
+      "EXTERNAL_ESTIMATES": [],
+      "AI_ASSUMPTIONS": [],
+      "AI_JUDGMENTS": [],
+      "UNRESOLVED": []
+    },
+    "artifact_type": "update_phase_4",
+    "phase": 4,
+    "update_id": "update-demo-001",
+    "summary": "Synthetic update Phase 4",
+    "handoff_supersession": {
+      "active": "handoff-update-001",
+      "superseded": "handoff-initial-001"
+    },
+    "ledger": {
+      "outcome_status": "not_matured"
+    }
+  }
+]
